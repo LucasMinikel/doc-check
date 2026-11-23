@@ -1,0 +1,168 @@
+/*
+ * Verificador de documento. Cada cor e medida usa a variável do site que o hospeda
+ * (os tokens do NEXUS) e cai para um valor próprio quando roda sozinho.
+ */
+.dc {
+  --dc-ink: var(--ink-1, #12151a);
+  --dc-ink-2: var(--ink-2, #1a1e25);
+  --dc-line: var(--line, #2a2f38);
+  --dc-line-strong: var(--line-strong, #3b424e);
+  --dc-text: var(--text, #e9ecf1);
+  --dc-text-2: var(--text-2, #aab1bd);
+  --dc-text-3: var(--text-3, #7c8491);
+  --dc-signal: var(--signal, #ffc24b);
+  --dc-signal-ink: var(--signal-ink, #1a1200);
+  --dc-ok: var(--ok, #5ad19a);
+  --dc-bad: var(--bad, #ff6b6b);
+  --dc-radius: var(--radius, 2px);
+  --dc-hit: var(--hit, 44px);
+  --dc-mono: var(--font-mono, ui-monospace, 'JetBrains Mono', monospace);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr);
+  gap: var(--s-5, 1.5rem);
+  align-items: start;
+  color: var(--dc-text);
+}
+
+/* Palco: a foto ou a câmera, com o reflexo marcado por cima na mesma escala. */
+.dc-stage {
+  position: relative;
+  aspect-ratio: 1.586; /* cartão ID-1 (85,6 × 54 mm) enquanto não há imagem */
+  max-height: 72vh;
+  margin-inline: auto;
+  width: 100%;
+  background: var(--dc-ink);
+  border: 1px solid var(--dc-line-strong);
+  border-radius: var(--dc-radius);
+  overflow: hidden;
+}
+.dc-stage.drag { border-color: var(--dc-signal); outline: 2px dashed var(--dc-signal); outline-offset: -8px; }
+.dc-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.dc-empty { position: absolute; inset: 0; display: grid; place-content: center; gap: 0.5rem; padding: 1.5rem; text-align: center; }
+.dc-empty p { margin: 0; font-size: 1.05rem; }
+.dc-empty .dc-hint { color: var(--dc-text-3); font-size: 0.875rem; max-width: 32ch; margin-inline: auto; }
+
+/* Moldura-guia na proporção do cartão: onde encaixar o documento. */
+.dc-guide {
+  position: absolute;
+  inset: 12% 10%;
+  border: 2px dashed rgb(255 255 255 / 0.55);
+  border-radius: 10px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.28);
+  pointer-events: none;
+}
+
+.dc-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.dc-glare { fill: rgb(255 107 107 / 0.12); stroke: var(--dc-bad); stroke-width: 2; }
+.dc-glare.warn { fill: rgb(255 194 75 / 0.12); stroke: var(--dc-signal); }
+/* Contorno do documento encontrado, na cor do pior estado. */
+.dc-quad { fill: rgb(90 209 154 / 0.08); stroke: var(--dc-ok); stroke-width: 3; stroke-linejoin: round; }
+.dc-quad.warn { fill: rgb(255 194 75 / 0.08); stroke: var(--dc-signal); }
+.dc-quad.fail { fill: rgb(255 107 107 / 0.08); stroke: var(--dc-bad); }
+
+/* Instrução ao vivo: uma frase, grande, sobre a câmera. */
+.dc-live {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  translate: -50% 0;
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  max-width: calc(100% - 2rem);
+  padding: 0.6rem 1.1rem;
+  font: 600 1.05rem/1.2 var(--font-display, inherit);
+  color: #fff;
+  text-align: center;
+  background: rgb(10 12 15 / 0.82);
+  border: 1px solid var(--dc-ok);
+  border-radius: var(--dc-radius);
+  pointer-events: none;
+}
+.dc-live.warn { border-color: var(--dc-signal); }
+.dc-live.fail { border-color: var(--dc-bad); }
+.dc-progress { display: block; width: 8rem; height: 4px; background: rgb(255 255 255 / 0.2); border-radius: 2px; overflow: hidden; }
+.dc-progress span { display: block; height: 100%; background: var(--dc-ok); transition: width 280ms linear; }
+.dc-tag {
+  position: absolute;
+  margin-top: 4px;
+  padding: 0.15rem 0.4rem;
+  font: 600 0.6875rem/1.2 var(--dc-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--dc-bad);
+  border-radius: var(--dc-radius);
+}
+.dc-tag.warn { background: var(--dc-signal); color: var(--dc-signal-ink); }
+
+/* Painel: veredito, checklist com medido × meta, ações. */
+.dc-panel { display: grid; gap: 1rem; }
+
+.dc-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--dc-line-strong); }
+.ok > .dc-dot { background: var(--dc-ok); }
+.warn > .dc-dot { background: var(--dc-signal); }
+.fail > .dc-dot { background: var(--dc-bad); }
+
+.dc-verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font: 600 1.05rem/1.3 var(--font-display, inherit);
+  border: 1px solid var(--dc-line-strong);
+  border-radius: var(--dc-radius);
+}
+.dc-verdict.ok { border-color: var(--dc-ok); }
+.dc-verdict.warn { border-color: var(--dc-signal); }
+.dc-verdict.fail { border-color: var(--dc-bad); }
+
+.dc-checks { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--dc-line); }
+.dc-checks li { display: flex; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--dc-line); }
+.dc-checks li > .dc-dot { margin-top: 0.4rem; }
+.dc-checks li > div { min-width: 0; flex: 1; }
+.dc-checks p { margin: 0; }
+.dc-check-head { display: flex; justify-content: space-between; gap: 0.5rem; }
+.dc-status { font: 600 0.6875rem/1.6 var(--dc-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--dc-text-3); }
+.ok .dc-status { color: var(--dc-ok); }
+.warn .dc-status { color: var(--dc-signal); }
+.fail .dc-status { color: var(--dc-bad); }
+.dc-msg { margin-top: 0.2rem !important; color: var(--dc-text-2); font-size: 0.875rem; line-height: 1.45; }
+.dc-measure { margin-top: 0.2rem !important; font: 0.75rem/1.4 var(--dc-mono); color: var(--dc-text-3); }
+.pending strong { color: var(--dc-text-3); }
+.dc-rule { font: 400 0.75rem var(--dc-mono); color: var(--dc-text-3); }
+.blocking .dc-status { color: var(--dc-bad); text-decoration: underline; text-underline-offset: 3px; }
+
+.dc-error { margin: 0; padding: 0.6rem 0.8rem; color: var(--dc-bad); border: 1px solid var(--dc-bad); border-radius: var(--dc-radius); font-size: 0.875rem; }
+
+.dc-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.dc-btn {
+  min-height: var(--dc-hit);
+  padding: 0 1rem;
+  font: 600 0.875rem/1 var(--font-body, inherit);
+  color: var(--dc-text);
+  background: transparent;
+  border: 1px solid var(--dc-line-strong);
+  border-radius: var(--dc-radius);
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+.dc-btn:hover:not(:disabled) { border-color: var(--dc-signal); color: var(--dc-signal); }
+.dc-btn:focus-visible { outline: 2px solid var(--dc-signal); outline-offset: 2px; }
+.dc-btn.primary { background: var(--dc-signal); border-color: var(--dc-signal); color: var(--dc-signal-ink); }
+.dc-btn.primary:hover:not(:disabled) { color: var(--dc-signal-ink); filter: brightness(1.08); }
+.dc-btn.quiet { border-color: transparent; color: var(--dc-text-3); }
+.dc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.dc-foot { margin: 0; font-size: 0.75rem; color: var(--dc-text-3); }
+
+@media (max-width: 860px) {
+  .dc { grid-template-columns: 1fr; }
+  .dc-stage { max-height: 60vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-btn, .dc-progress span { transition: none; }
+}

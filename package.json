@@ -1,0 +1,31 @@
+{
+  "name": "doc-check",
+  "version": "0.1.0",
+  "description": "Validação de foto de documento no navegador: nitidez, iluminação, reflexo, resolução e orientação, sem enviar a imagem.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./core": "./src/core/index.ts",
+    "./react": "./src/react/index.ts",
+    "./specimen": "./src/demo/specimen-card.ts",
+    "./docs": "./src/demo/HowItWorks.tsx"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}
